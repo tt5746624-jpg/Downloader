@@ -105,8 +105,7 @@ export function DownloadWorkbench({ prefillUrl = "" }: DownloadWorkbenchProps) {
   const prepareDownload = trpc.download.prepare.useMutation({
     onSuccess: (result) => {
       setDeliveryUrl(result.downloadUrl);
-      setPreviewOpen(false);
-      setMessage("Authorized direct file is ready. Use the download link in the selected file row.");
+      setMessage("Authorized direct file is ready. Download it now from the confirmation dialog or file row.");
     },
     onError: (error) => setMessage(error.message),
   });
@@ -268,7 +267,7 @@ export function DownloadWorkbench({ prefillUrl = "" }: DownloadWorkbenchProps) {
             <span>{format === "mp4" ? "MP4 · 1080p · video" : "MP3 · 320 kbps · audio"}</span>
           </div>
           {deliveryUrl ? (
-            <a className="prepare-button" href={deliveryUrl} target="_blank" rel="noreferrer">
+            <a className="prepare-button" href={deliveryUrl} target="_blank" rel="noreferrer" download>
               <Download size={16} aria-hidden="true" /> Download approved file
             </a>
           ) : (
@@ -285,10 +284,10 @@ export function DownloadWorkbench({ prefillUrl = "" }: DownloadWorkbenchProps) {
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="preview-dialog" showCloseButton={false} aria-describedby="preview-description">
           <DialogHeader className="preview-dialog__header">
-            <div className="preview-dialog__overline"><span className="preview-dialog__live-dot" /> Link inspection complete</div>
+            <div className="preview-dialog__overline"><span className={`preview-dialog__live-dot ${preview?.source === "Direct file" ? "preview-dialog__live-dot--ready" : ""}`} /> {preview?.source === "Direct file" ? "Direct file verified" : "Link inspection complete"}</div>
             <DialogClose className="preview-dialog__close" aria-label="Close preview"><X size={18} /></DialogClose>
-            <DialogTitle>Media preview</DialogTitle>
-            <DialogDescription id="preview-description">Confirm the source before you prepare an output format.</DialogDescription>
+            <DialogTitle>{preview?.source === "Direct file" ? "Ready to download" : "Media preview"}</DialogTitle>
+            <DialogDescription id="preview-description">{preview?.source === "Direct file" ? "Confirm your permission once, then use Download now to open the approved original file." : "This link can be previewed. To download, use an HTTPS direct file URL that you own or are allowed to save."}</DialogDescription>
           </DialogHeader>
           <div className="preview-dialog__media">
             <img src={preview?.thumbnail || "https://files.manuscdn.com/user_upload_by_module/session_file/310519663879270209/MzfaERwkMeLehxFp.jpg"} alt="Video thumbnail preview" />
@@ -300,14 +299,22 @@ export function DownloadWorkbench({ prefillUrl = "" }: DownloadWorkbenchProps) {
             <p>{preview?.author || "Public creator"}</p>
             <h3>{preview?.title || "Your public link is ready to preview"}</h3>
             <div className="preview-dialog__format-row"><span>Selected output</span><strong>{format === "mp4" ? "MP4 · 1080p video" : "MP3 · 320 kbps audio"}</strong></div>
-            <label className="ownership-check">
-              <input type="checkbox" checked={ownershipConfirmed} onChange={(event) => setOwnershipConfirmed(event.target.checked)} />
-              <span>I own this file or have permission to download it.</span>
-            </label>
+            {preview?.source === "Direct file" ? (
+              <label className="ownership-check">
+                <input type="checkbox" checked={ownershipConfirmed} onChange={(event) => setOwnershipConfirmed(event.target.checked)} />
+                <span>I own this file or have permission to download it.</span>
+              </label>
+            ) : (
+              <div className="preview-only-notice"><span>Preview only</span><p>Paste an authorized direct URL ending in <b>.mp4</b>, <b>.webm</b>, <b>.mp3</b>, or <b>.m4a</b> to unlock the actual download action.</p></div>
+            )}
           </div>
           <DialogFooter className="preview-dialog__footer">
             <DialogClose className="preview-dialog__back">Adjust format</DialogClose>
-            <button className="preview-dialog__continue" type="button" onClick={prepareFile} disabled={prepareDownload.isPending}><Download size={16} aria-hidden="true" /> {prepareDownload.isPending ? "Preparing" : `Prepare ${format.toUpperCase()}`} <ArrowUpRight size={15} aria-hidden="true" /></button>
+            {deliveryUrl ? (
+              <a className="preview-dialog__continue preview-dialog__download" href={deliveryUrl} target="_blank" rel="noreferrer" download><Download size={16} aria-hidden="true" /> Download now <ArrowUpRight size={15} aria-hidden="true" /></a>
+            ) : (
+              <button className="preview-dialog__continue" type="button" onClick={prepareFile} disabled={prepareDownload.isPending || preview?.source !== "Direct file"}><Download size={16} aria-hidden="true" /> {preview?.source === "Direct file" ? (prepareDownload.isPending ? "Preparing" : "Unlock download") : "Preview only"} <ArrowUpRight size={15} aria-hidden="true" /></button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

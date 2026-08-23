@@ -340,6 +340,7 @@ body { background: #0a1019; color: #eef1f1; }
 .preview-dialog__header { background: #121f2d; border-bottom: 1px solid #344458; gap: 7px !important; padding: 25px 29px 21px; position: relative; text-align: left !important; }
 .preview-dialog__overline { align-items: center; color: #aebbc8; display: flex; font-family: "DM Mono", monospace; font-size: 9px; gap: 7px; letter-spacing: .08em; text-transform: uppercase; }
 .preview-dialog__live-dot { background: #d8ff64; border-radius: 50%; box-shadow: 0 0 0 4px rgba(216,255,100,.1); height: 6px; width: 6px; }
+.preview-dialog__live-dot--ready { background: #ff6b35; box-shadow: 0 0 0 4px rgba(255,107,53,.13); }
 .preview-dialog__header h2 { color: #f5f3ed; font-size: 28px; letter-spacing: -.045em; margin-top: 4px; }
 .preview-dialog__header p { color: #aab6c1; font-size: 12px; line-height: 1.5; max-width: 390px; }
 .preview-dialog__close { align-items: center; background: #1f2d3c; border: 1px solid #3e5063; color: #f4f5f3; display: flex; height: 36px; justify-content: center; position: absolute; right: 20px; top: 20px; transition: background 160ms ease-out, transform 160ms ease-out; width: 36px; }
@@ -359,7 +360,13 @@ body { background: #0a1019; color: #eef1f1; }
 .preview-dialog__format-row strong { color: #d8ff64; font-weight: 500; }
 .ownership-check { align-items: flex-start; border-top: 1px solid #344458; color: #cad3dc; cursor: pointer; display: flex; font-family: "DM Mono", monospace; font-size: 10px; gap: 9px; line-height: 1.45; margin-top: 16px; padding-top: 15px; }
 .ownership-check input { accent-color: #ff6b35; flex: 0 0 auto; height: 15px; margin: 0; width: 15px; }
+.preview-only-notice { border-top: 1px solid #344458; margin-top: 16px; padding-top: 15px; }
+.preview-only-notice span { color: #ff986f; font-family: "DM Mono", monospace; font-size: 9px; letter-spacing: .07em; text-transform: uppercase; }
+.preview-only-notice p { color: #bac5cf; font-family: "DM Mono", monospace; font-size: 10px; line-height: 1.55; margin: 7px 0 0; }
+.preview-only-notice b { color: #d8ff64; font-weight: 500; }
 .preview-dialog__continue:disabled, .prepare-button:disabled { cursor: wait; opacity: .62; }
+.preview-dialog__continue:disabled { background: #293644; border-color: #3a4a5c; color: #a7b2bd; }
+.preview-dialog__download { text-decoration: none; }
 .preview-dialog__footer { background: #0c141f; border-top: 1px solid #2f4053; display: flex !important; flex-direction: row !important; justify-content: space-between !important; padding: 17px 29px; }
 .preview-dialog__back { background: transparent; border: 0; color: #c5d0da; font-family: "DM Mono", monospace; font-size: 10px; padding: 10px 0; transition: color 160ms ease-out; }
 .preview-dialog__back:hover { color: #ff986f; }

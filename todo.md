@@ -12,4 +12,7 @@
 - [x] Remove or restore the missing Wouter patch reference that blocks Vercel dependency installation.
 - [x] Add Vercel-compatible build and serverless route configuration for the Node.js backend.
 - [x] Hand off final Vercel-hosted verification to the user, since GitHub push and Redeploy occur in the user’s external accounts.
-- [ ] Create and deliver a full source ZIP containing all Vercel build fixes, backend files, assets, and deployment instructions.
+- [x] Create and deliver a full source ZIP containing all Vercel build fixes, backend files, assets, and deployment instructions.
+- [x] Make authorized direct media-file delivery a clearly visible, one-step download action after preview confirmation.
+- [x] Distinguish preview-only platform links from direct downloadable file URLs in the input and dialog experience.
+- [ ] Validate the revised direct-download workflow and refresh the source ZIP.
