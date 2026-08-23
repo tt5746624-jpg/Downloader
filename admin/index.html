@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Firebase Data Manager · Dashboard</title>
+    <!-- Firebase v9 compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        body {
+            background: #f5f7fb;
+            min-height: 100vh;
+        }
+
+        /* ===== LOGIN / AUTH ===== */
+        .auth-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #e8edf5 0%, #d5dce8 100%);
+            padding: 1.5rem;
+        }
+        .auth-card {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 40px;
+            padding: 2.8rem 3rem;
+            max-width: 440px;
+            width: 100%;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.08);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        .auth-card .logo {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #0a1e2f;
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .auth-card .logo i {
+            color: #2a7de1;
+            font-size: 2rem;
+        }
+        .auth-card .subtitle {
+            color: #6b7f94;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+        .auth-card .auth-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e8ecf2;
+            border-radius: 16px;
+            font-size: 1rem;
+            background: white;
+            transition: 0.2s;
+            margin-bottom: 1rem;
+        }
+        .auth-card .auth-input:focus {
+            outline: none;
+            border-color: #2a7de1;
+            box-shadow: 0 0 0 4px rgba(42,125,225,0.1);
+        }
+        .auth-card .auth-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            background: #0a1e2f;
+            color: white;
+        }
+        .auth-card .auth-btn:hover {
+            background: #1a3f62;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(10,30,47,0.2);
+        }
+        .auth-card .auth-btn-outline {
+            background: transparent;
+            color: #0a1e2f;
+            border: 2px solid #dce3ec;
+            margin-top: 8px;
+        }
+        .auth-card .auth-btn-outline:hover {
+            background: #eef2f7;
+            transform: none;
+            box-shadow: none;
+        }
+        .auth-error {
+            color: #e74c3c;
+            background: #fde8e8;
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            margin: 12px 0;
+            display: none;
+        }
+
+        /* ===== MAIN DASHBOARD ===== */
+        .dashboard {
+            display: none;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 2rem;
+        }
+
+        /* Top Bar */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0 1.5rem 0;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .topbar .brand {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #0a1e2f;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .topbar .brand i {
+            color: #2a7de1;
+        }
+        .topbar .brand span {
+            font-weight: 300;
+            color: #6b7f94;
+        }
+        .topbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: white;
+            padding: 8px 20px 8px 24px;
+            border-radius: 40px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+            border: 1px solid #eef2f7;
+        }
+        .topbar .user-info i {
+            font-size: 1.3rem;
+            color: #2a7de1;
+        }
+        .topbar .user-info .email {
+            font-weight: 500;
+            color: #0a1e2f;
+        }
+        .topbar .user-info .logout-btn {
+            background: none;
+            border: 1px solid #e2e8f0;
+            padding: 6px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #6b7f94;
+            transition: 0.15s;
+        }
+        .topbar .user-info .logout-btn:hover {
+            background: #f5f7fb;
+            color: #e74c3c;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.2rem 1.5rem;
+            border: 1px solid #eef2f7;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .stat-card .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #8a9bb0;
+            font-weight: 600;
+        }
+        .stat-card .stat-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0a1e2f;
+        }
+        .stat-card .stat-icon {
+            float: right;
+            font-size: 1.6rem;
+            color: #2a7de1;
+            opacity: 0.3;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        .quick-actions .qa-btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: #0a1e2f;
+        }
+        .quick-actions .qa-btn:hover {
+            background: #f5f7fb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .quick-actions .qa-btn.primary {
+            background: #0a1e2f;
+            color: white;
+            border-color: #0a1e2f;
+        }
+        .quick-actions .qa-btn.primary:hover {
+            background: #1a3f62;
+        }
+
+        /* Section Tabs (Horizontal) */
+        .section-tabs {
+            display: flex;
+            gap: 4px;
+            background: white;
+            padding: 6px;
+            border-radius: 20px;
+            border: 1px solid #eef2f7;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            overflow-x: auto;
+        }
+        .section-tabs .tab-btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 16px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+            background: transparent;
+            color: #6b7f94;
+            white-space: nowrap;
+        }
+        .section-tabs .tab-btn:hover {
+            background: #f5f7fb;
+        }
+        .section-tabs .tab-btn.active {
+            background: #0a1e2f;
+            color: white;
+            box-shadow: 0 4px 15px rgba(10,30,47,0.15);
+        }
+        .section-tabs .tab-btn .badge {
+            background: #2a7de1;
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 6px;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Add Form */
+        .add-form {
+            background: white;
+            border-radius: 24px;
+            padding: 1.8rem 2rem;
+            border: 1px solid #eef2f7;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px 18px;
+            align-items: end;
+            margin-bottom: 2rem;
+        }
+        .add-form .field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .add-form .field label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #8a9bb0;
+        }
+        .add-form .field input,
+        .add-form .field select,
+        .add-form .field textarea {
+            padding: 12px 16px;
+            border: 2px solid #eef2f7;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            background: #fafbfc;
+            transition: 0.15s;
+            width: 100%;
+        }
+        .add-form .field textarea {
+            resize: vertical;
+            min-height: 50px;
+            border-radius: 14px;
+        }
+        .add-form .field input:focus,
+        .add-form .field select:focus,
+        .add-form .field textarea:focus {
+            outline: none;
+            border-color: #2a7de1;
+            box-shadow: 0 0 0 4px rgba(42,125,225,0.08);
+            background: white;
+        }
+        .add-form .submit-btn {
+            background: #0a1e2f;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .add-form .submit-btn:hover {
+            background: #1a3f62;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(10,30,47,0.15);
+        }
+
+        /* Cards Grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+        }
+        .data-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid #eef2f7;
+            transition: 0.2s;
+        }
+        .data-card:hover {
+            border-color: #d5dce8;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.04);
+            transform: translateY(-3px);
+        }
+        .data-card .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #0a1e2f;
+            margin-bottom: 4px;
+        }
+        .data-card .card-label {
+            font-size: 0.8rem;
+            color: #6b7f94;
+            background: #f5f7fb;
+            padding: 3px 12px;
+            border-radius: 30px;
+            display: inline-block;
+            margin: 4px 0 8px;
+        }
+        .data-card .card-description {
+            font-size: 0.85rem;
+            color: #4a5e7a;
+            background: #f8fafc;
+            padding: 8px 14px;
+            border-radius: 12px;
+            margin: 6px 0 10px;
+            border-left: 3px solid #2a7de1;
+        }
+        .data-card .card-links {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 8px 0 12px;
+        }
+        .data-card .card-links a {
+            background: #f5f7fb;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            color: #0a1e2f;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .data-card .card-links a:hover {
+            background: #eef2f7;
+        }
+        .data-card .card-image {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 14px;
+            margin-bottom: 10px;
+            background: #f5f7fb;
+        }
+        .data-card .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f0f4fa;
+        }
+        .data-card .card-actions button {
+            background: none;
+            border: 1px solid #e2e8f0;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-weight: 500;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            justify-content: center;
+        }
+        .data-card .card-actions .edit-btn {
+            background: #eef4fa;
+            border-color: #d5dce8;
+        }
+        .data-card .card-actions .edit-btn:hover {
+            background: #e2e8f0;
+        }
+        .data-card .card-actions .delete-btn {
+            border-color: #fcd3d3;
+            color: #b33636;
+        }
+        .data-card .card-actions .delete-btn:hover {
+            background: #ffebeb;
+        }
+        .data-card .card-actions .ban-btn {
+            background: #fde8e8;
+            border-color: #f5baba;
+            color: #c0392b;
+        }
+        .data-card .card-actions .unban-btn {
+            background: #e8f5e9;
+            border-color: #a5d6a7;
+            color: #27ae60;
+        }
+        .data-card .card-actions .copy-token-btn {
+            background: #e3f2fd;
+            border-color: #90caf9;
+            color: #0d47a1;
+            flex: 1.5;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #8a9bb0;
+        }
+        .empty-state i {
+            font-size: 2.5rem;
+            opacity: 0.3;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            padding: 2px 12px;
+            border-radius: 30px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .status-badge.premium { background: #e8f5e9; color: #27ae60; }
+        .status-badge.ban { background: #ffebee; color: #e74c3c; }
+        .status-badge.free { background: #e3f2fd; color: #1976d2; }
+        .status-badge.expired { background: #fff3e0; color: #e67e22; }
+
+        /* Search & User Stats Breakdown */
+        .user-stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 1.5rem;
+        }
+        .u-stat-box {
+            background: white;
+            padding: 12px;
+            border-radius: 16px;
+            border: 1px solid #eef2f7;
+            text-align: center;
+        }
+        .u-stat-box .u-title { font-size: 0.7rem; color: #8a9bb0; font-weight: 600; text-transform: uppercase; }
+        .u-stat-box .u-val { font-size: 1.4rem; font-weight: 700; color: #0a1e2f; margin-top: 2px; }
+
+        .search-box {
+            background: white;
+            border-radius: 20px;
+            padding: 0.8rem 1.5rem;
+            border: 1px solid #eef2f7;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 2px solid #eef2f7;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            background: #fafbfc;
+            min-width: 150px;
+        }
+
+        /* Edit Modal */
+        .edit-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10,30,47,0.5);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+        .edit-modal.active {
+            display: flex;
+        }
+        .edit-modal .modal-content {
+            background: white;
+            max-width: 480px;
+            width: 90%;
+            padding: 2rem;
+            border-radius: 32px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .edit-modal .modal-content input,
+        .edit-modal .modal-content select,
+        .edit-modal .modal-content textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #eef2f7;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            background: #fafbfc;
+            font-size: 0.9rem;
+        }
+        .edit-modal .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+            justify-content: flex-end;
+        }
+        .edit-modal .modal-actions button {
+            padding: 10px 28px;
+            border-radius: 16px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .edit-modal .save-edit { background: #0a1e2f; color: white; }
+        .edit-modal .cancel-edit { background: #f5f7fb; color: #4a5e7a; }
+
+        /* User Manage Dialog */
+        .user-dialog-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10,30,47,0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .user-dialog-box {
+            background: white;
+            border-radius: 32px;
+            padding: 2rem;
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.2);
+        }
+        .user-dialog-box .opt-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            border: 1px solid #eef2f7;
+            border-radius: 16px;
+            background: white;
+            cursor: pointer;
+            font-weight: 500;
+            text-align: left;
+            margin-bottom: 8px;
+        }
+        .user-dialog-box .close-dialog-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 16px;
+            background: #f5f7fb;
+            cursor: pointer;
+            font-weight: 600;
+            color: #4a5e7a;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .auth-card { padding: 2rem; }
+            .dashboard { padding: 1rem; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .add-form { grid-template-columns: 1fr; padding: 1.2rem; }
+            .card-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== AUTH ==================== -->
+<div id="authWrapper" class="auth-wrapper">
+    <div class="auth-card">
+        <div class="logo"><i class="fas fa-database"></i> DataManager</div>
+        <div class="subtitle">Firebase Realtime · Admin Panel</div>
+        <div id="authError" class="auth-error"><i class="fas fa-exclamation-circle"></i> <span id="errorText"></span></div>
+        <input type="email" id="emailInput" class="auth-input" placeholder="Email" value="demo@data.com" />
+        <input type="password" id="passwordInput" class="auth-input" placeholder="Password" value="demodemo" />
+        <button class="auth-btn" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Login</button>
+        <button class="auth-btn auth-btn-outline" id="signupBtn"><i class="fas fa-user-plus"></i> Create Account</button>
+    </div>
+</div>
+
+<!-- ==================== DASHBOARD ==================== -->
+<div id="dashboard" class="dashboard">
+
+    <!-- Top Bar -->
+    <div class="topbar">
+        <div class="brand">
+            <i class="fas fa-database"></i> DataManager <span>· Admin</span>
+        </div>
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span class="email" id="userEmailDisplay">user@email.com</span>
+            <button class="logout-btn" id="signOutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="statsRow">
+        <div class="stat-card">
+            <i class="stat-icon fas fa-drone"></i>
+            <div class="stat-label">Drone Records</div>
+            <div class="stat-number" id="statDrone">0</div>
+        </div>
+        <div class="stat-card">
+            <i class="stat-icon fas fa-bolt"></i>
+            <div class="stat-label">Damage Boost</div>
+            <div class="stat-number" id="statList">0</div>
+        </div>
+        <div class="stat-card">
+            <i class="stat-icon fas fa-map-marked-alt"></i>
+            <div class="stat-label">Custom Maps</div>
+            <div class="stat-number" id="statMap">0</div>
+        </div>
+        <div class="stat-card">
+            <i class="stat-icon fas fa-users"></i>
+            <div class="stat-label">User Reports</div>
+            <div class="stat-number" id="statReports">0</div>
+        </div>
+        <div class="stat-card">
+            <i class="stat-icon fas fa-user-cog"></i>
+            <div class="stat-label">Total Users</div>
+            <div class="stat-number" id="statUsers">0</div>
+        </div>
+        <div class="stat-card">
+            <i class="stat-icon fas fa-music"></i>
+            <div class="stat-label">Music</div>
+            <div class="stat-number" id="statMusic">0</div>
+        </div>
+        <div class="stat-card">
+            <i class="stat-icon fas fa-palette"></i>
+            <div class="stat-label">Blackground</div>
+            <div class="stat-number" id="statBg">0</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <button class="qa-btn primary" id="qaDrone"><i class="fas fa-drone"></i> Drone</button>
+        <button class="qa-btn" id="qaList"><i class="fas fa-bolt"></i> Damage Boost</button>
+        <button class="qa-btn" id="qaMap"><i class="fas fa-map-marked-alt"></i> Custom Map</button>
+        <button class="qa-btn" id="qaReports"><i class="fas fa-users"></i> User Reports</button>
+        <button class="qa-btn" id="qaMusic"><i class="fas fa-music"></i> Music</button>
+        <button class="qa-btn" id="qaBg"><i class="fas fa-palette"></i> Blackground</button>
+        <button class="qa-btn" id="qaUsers"><i class="fas fa-user-cog"></i> Manage Users</button>
+    </div>
+
+    <!-- Section Tabs -->
+    <div class="section-tabs" id="sectionTabs">
+        <button class="tab-btn active" data-tab="tabDrone"><i class="fas fa-drone"></i> Drone</button>
+        <button class="tab-btn" data-tab="tabList"><i class="fas fa-bolt"></i> Damage Boost</button>
+        <button class="tab-btn" data-tab="tabMap"><i class="fas fa-map-marked-alt"></i> Custom Map</button>
+        <button class="tab-btn" data-tab="tabUserReport"><i class="fas fa-users"></i> User Reports <span class="badge" id="reportBadge">0</span></button>
+        <button class="tab-btn" data-tab="tabMusic"><i class="fas fa-music"></i> Music</button>
+        <button class="tab-btn" data-tab="tabBlackground"><i class="fas fa-palette"></i> Blackground</button>
+        <button class="tab-btn" data-tab="tabUsers"><i class="fas fa-user-cog"></i> Manage Users <span class="badge" id="userTabBadge">0</span></button>
+    </div>
+
+    <!-- ==================== TAB: DRONE ==================== -->
+    <div id="tabDrone" class="tab-content active">
+        <div class="add-form">
+            <div class="field"><label>Title</label><input type="text" id="addDroneTitle" placeholder="Title" /></div>
+            <div class="field"><label>Label</label><input type="text" id="addDroneLabel" placeholder="Label" /></div>
+            <div class="field"><label>Date (auto)</label><input type="text" id="addDroneDate" readonly style="background:#f0f4fa;" /></div>
+            <div class="field"><label>Type</label>
+                <select id="addDroneType"><option value="3d">3D</option><option value="drone" selected>Drone</option><option value="damage">Damage</option></select>
+            </div>
+            <div class="field"><label>Link</label><input type="text" id="addDroneLink" placeholder="https://..." /></div>
+            <div class="field"><label>Link1</label><input type="text" id="addDroneLink1" placeholder="https://..." /></div>
+            <div class="field"><button class="submit-btn" id="addDroneBtn"><i class="fas fa-plus"></i> Add</button></div>
+        </div>
+        <div id="droneCardContainer" class="card-grid"></div>
+        <div id="droneEmpty" class="empty-state"><i class="fas fa-drone"></i>No drone data yet.</div>
+    </div>
+
+    <!-- ==================== TAB: LIST ==================== -->
+    <div id="tabList" class="tab-content">
+        <div class="add-form">
+            <div class="field"><label>Title</label><input type="text" id="addListTitle" placeholder="Title" /></div>
+            <div class="field"><label>Label</label><input type="text" id="addListLabel" placeholder="Label" /></div>
+            <div class="field"><label>Link</label><input type="text" id="addListLink" placeholder="https://..." /></div>
+            <div class="field"><label>Link1</label><input type="text" id="addListLink1" placeholder="https://..." /></div>
+            <div class="field" style="grid-column:span 1;"><label>Description</label><textarea id="addListDescription" placeholder="Description or date..."></textarea></div>
+            <div class="field"><button class="submit-btn" id="addListBtn"><i class="fas fa-plus"></i> Add</button></div>
+        </div>
+        <div id="listCardContainer" class="card-grid"></div>
+        <div id="listEmpty" class="empty-state"><i class="fas fa-bolt"></i>No damage boost data yet.</div>
+    </div>
+
+    <!-- ==================== TAB: CUSTOM MAP (NEW) ==================== -->
+    <div id="tabMap" class="tab-content">
+        <div class="add-form" style="grid-template-columns: 1fr;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
+                <div class="field"><label>Title</label><input type="text" id="addMapTitle" placeholder="Title" /></div>
+                <div class="field"><label>Image URL</label><input type="text" id="addMapImage" placeholder="Image URL" /></div>
+                <div class="field">
+                    <label>Tags (Comma separated, e.g. light, low)</label>
+                    <input type="text" id="addMapTxt" placeholder="light, low" />
+                </div>
+            </div>
+            
+            <!-- Dynamic Inputs Container for Custom Map Tags -->
+            <div id="dynamicMapFields" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 10px;"></div>
+
+            <div class="field" style="margin-top: 10px;">
+                <button class="submit-btn" id="addMapBtn"><i class="fas fa-plus"></i> Save Custom Map</button>
+            </div>
+        </div>
+        <div id="mapCardContainer" class="card-grid"></div>
+        <div id="mapEmpty" class="empty-state"><i class="fas fa-map-marked-alt"></i>No custom map data yet.</div>
+    </div>
+
+    <!-- ==================== TAB: USER REPORT ==================== -->
+    <div id="tabUserReport" class="tab-content">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:1.5rem;">
+            <button class="submit-btn" id="refreshReportsBtn" style="background:#2a7de1; padding:10px 24px;"><i class="fas fa-sync"></i> Refresh</button>
+        </div>
+        <div id="reportCardContainer" class="card-grid"></div>
+        <div id="reportEmpty" class="empty-state"><i class="fas fa-users"></i>No user reports yet.</div>
+    </div>
+
+    <!-- ==================== TAB: MUSIC ==================== -->
+    <div id="tabMusic" class="tab-content">
+        <div class="add-form">
+            <div class="field"><label>Title</label><input type="text" id="addMusicTitle" placeholder="Title" /></div>
+            <div class="field"><label>Image URL</label><input type="text" id="addMusicImg" placeholder="Image URL" /></div>
+            <div class="field"><label>Zip URL</label><input type="text" id="addMusicUrl" placeholder="Zip URL" /></div>
+            <div class="field"><label>Play URL</label><input type="text" id="addMusicPlay" placeholder="Play URL" /></div>
+            <div class="field"><button class="submit-btn" id="addMusicBtn"><i class="fas fa-plus"></i> Add</button></div>
+        </div>
+        <div id="musicCardContainer" class="card-grid"></div>
+        <div id="musicEmpty" class="empty-state"><i class="fas fa-music"></i>No music data yet.</div>
+    </div>
+
+    <!-- ==================== TAB: BLACKGROUND ==================== -->
+    <div id="tabBlackground" class="tab-content">
+        <div class="add-form">
+            <div class="field"><label>Title</label><input type="text" id="addBgTitle" placeholder="Title" /></div>
+            <div class="field"><label>Image URL</label><input type="text" id="addBgLabel" placeholder="Image URL" /></div>
+            <div class="field"><label>URL</label><input type="text" id="addBgUrl" placeholder="URL" /></div>
+            <div class="field"><button class="submit-btn" id="addBgBtn"><i class="fas fa-plus"></i> Add</button></div>
+        </div>
+        <div id="bgCardContainer" class="card-grid"></div>
+        <div id="bgEmpty" class="empty-state"><i class="fas fa-palette"></i>No blackground data yet.</div>
+    </div>
+
+    <!-- ==================== TAB: MANAGE USERS ==================== -->
+    <div id="tabUsers" class="tab-content">
+        <!-- Expanded Status Dashboard for Users -->
+        <div class="user-stats-container">
+            <div class="u-stat-box">
+                <div class="u-title">Total Users</div>
+                <div class="u-val" id="uStatTotal">0</div>
+            </div>
+            <div class="u-stat-box" style="border-top: 3px solid #27ae60;">
+                <div class="u-title" style="color: #27ae60;">Premium</div>
+                <div class="u-val" id="uStatPremium">0</div>
+            </div>
+            <div class="u-stat-box" style="border-top: 3px solid #1976d2;">
+                <div class="u-title" style="color: #1976d2;">Free / Unknown</div>
+                <div class="u-val" id="uStatFree">0</div>
+            </div>
+            <div class="u-stat-box" style="border-top: 3px solid #e74c3c;">
+                <div class="u-title" style="color: #e74c3c;">Banned</div>
+                <div class="u-val" id="uStatBan">0</div>
+            </div>
+            <div class="u-stat-box" style="border-top: 3px solid #e67e22;">
+                <div class="u-title" style="color: #e67e22;">Expired</div>
+                <div class="u-val" id="uStatExpired">0</div>
+            </div>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="searchUserInput" placeholder="🔍 Search by Device ID..." />
+            <span class="total" id="totalUsersText">Total: 0</span>
+        </div>
+        <div id="userCardContainer" class="card-grid"></div>
+        <div id="userEmpty" class="empty-state"><i class="fas fa-users"></i>No users found.</div>
+    </div>
+
+</div>
+
+<!-- ==================== EDIT MODAL ==================== -->
+<div class="edit-modal" id="editModal">
+    <div class="modal-content">
+        <h3><i class="fas fa-pen" style="color:#2a7de1;"></i> Edit Record</h3>
+        <input type="text" id="editKey" hidden />
+        <input type="text" id="editPath" hidden />
+        <input type="text" id="editTitle" placeholder="Title" />
+        <input type="text" id="editLabel" placeholder="Label / Image" />
+        <input type="text" id="editLink" placeholder="Link / URL" />
+        <input type="text" id="editLink1" placeholder="Link1 / Play URL" />
+        <textarea id="editDescription" placeholder="Description"></textarea>
+        <div class="modal-actions">
+            <button class="cancel-edit" id="cancelEditBtn">Cancel</button>
+            <button class="save-edit" id="saveEditBtn"><i class="fas fa-save"></i> Save</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==================== FIREBASE CONFIG ====================
+    const firebaseConfig = {
+        apiKey: "AIzaSyBxZ5bQBLbBMDvVIJ_Cm6Qt3en-RSKYUnA",
+        authDomain: "xoni-f669d.firebaseapp.com",
+        databaseURL: "https://xoni-f669d-default-rtdb.firebaseio.com",
+        projectId: "xoni-f669d",
+        storageBucket: "xoni-f669d.appspot.com",
+        messagingSenderId: "203897949192",
+        appId: "1:203897949192:android:dfd8251aa2382b5bc315bd"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const database = firebase.database();
+    const droneRef = database.ref('drone');
+    const listRef = database.ref('list');
+    const reportRef = database.ref('report');
+    const dataRef = database.ref('data');
+    const blackgroundRef = database.ref('blackground');
+    const muRef = database.ref('mu');
+    const customMapRef = database.ref('custommap'); // Custom map DB Ref
+
+    // ==================== DOM REFS ====================
+    const authWrapper = document.getElementById('authWrapper');
+    const dashboard = document.getElementById('dashboard');
+    const userEmailDisplay = document.getElementById('userEmailDisplay');
+    const authError = document.getElementById('authError');
+    const errorText = document.getElementById('errorText');
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const signupBtn = document.getElementById('signupBtn');
+    const signOutBtn = document.getElementById('signOutBtn');
+
+    // Stats
+    const statDrone = document.getElementById('statDrone');
+    const statList = document.getElementById('statList');
+    const statMap = document.getElementById('statMap');
+    const statReports = document.getElementById('statReports');
+    const statUsers = document.getElementById('statUsers');
+    const statMusic = document.getElementById('statMusic');
+    const statBg = document.getElementById('statBg');
+
+    // Custom Map Elements
+    const addMapTitle = document.getElementById('addMapTitle');
+    const addMapImage = document.getElementById('addMapImage');
+    const addMapTxt = document.getElementById('addMapTxt');
+    const dynamicMapFields = document.getElementById('dynamicMapFields');
+    const addMapBtn = document.getElementById('addMapBtn');
+    const mapCardContainer = document.getElementById('mapCardContainer');
+    const mapEmpty = document.getElementById('mapEmpty');
+
+    // Drone
+    const addDroneTitle = document.getElementById('addDroneTitle');
+    const addDroneLabel = document.getElementById('addDroneLabel');
+    const addDroneDate = document.getElementById('addDroneDate');
+    const addDroneType = document.getElementById('addDroneType');
+    const addDroneLink = document.getElementById('addDroneLink');
+    const addDroneLink1 = document.getElementById('addDroneLink1');
+    const addDroneBtn = document.getElementById('addDroneBtn');
+    const droneCardContainer = document.getElementById('droneCardContainer');
+    const droneEmpty = document.getElementById('droneEmpty');
+
+    // List
+    const addListTitle = document.getElementById('addListTitle');
+    const addListLabel = document.getElementById('addListLabel');
+    const addListLink = document.getElementById('addListLink');
+    const addListLink1 = document.getElementById('addListLink1');
+    const addListDescription = document.getElementById('addListDescription');
+    const addListBtn = document.getElementById('addListBtn');
+    const listCardContainer = document.getElementById('listCardContainer');
+    const listEmpty = document.getElementById('listEmpty');
+
+    // Reports
+    const reportCardContainer = document.getElementById('reportCardContainer');
+    const reportEmpty = document.getElementById('reportEmpty');
+    const refreshReportsBtn = document.getElementById('refreshReportsBtn');
+    const reportBadge = document.getElementById('reportBadge');
+
+    // Music
+    const addMusicTitle = document.getElementById('addMusicTitle');
+    const addMusicImg = document.getElementById('addMusicImg');
+    const addMusicUrl = document.getElementById('addMusicUrl');
+    const addMusicPlay = document.getElementById('addMusicPlay');
+    const addMusicBtn = document.getElementById('addMusicBtn');
+    const musicCardContainer = document.getElementById('musicCardContainer');
+    const musicEmpty = document.getElementById('musicEmpty');
+
+    // Blackground
+    const addBgTitle = document.getElementById('addBgTitle');
+    const addBgLabel = document.getElementById('addBgLabel');
+    const addBgUrl = document.getElementById('addBgUrl');
+    const addBgBtn = document.getElementById('addBgBtn');
+    const bgCardContainer = document.getElementById('bgCardContainer');
+    const bgEmpty = document.getElementById('bgEmpty');
+
+    // Users
+    const userCardContainer = document.getElementById('userCardContainer');
+    const userEmpty = document.getElementById('userEmpty');
+    const userTabBadge = document.getElementById('userTabBadge');
+    const totalUsersText = document.getElementById('totalUsersText');
+    const searchUserInput = document.getElementById('searchUserInput');
+
+    // User Detailed Stats
+    const uStatTotal = document.getElementById('uStatTotal');
+    const uStatPremium = document.getElementById('uStatPremium');
+    const uStatFree = document.getElementById('uStatFree');
+    const uStatBan = document.getElementById('uStatBan');
+    const uStatExpired = document.getElementById('uStatExpired');
+
+    // Edit Modal
+    const editModal = document.getElementById('editModal');
+    const editKey = document.getElementById('editKey');
+    const editPath = document.getElementById('editPath');
+    const editTitle = document.getElementById('editTitle');
+    const editLabel = document.getElementById('editLabel');
+    const editLink = document.getElementById('editLink');
+    const editLink1 = document.getElementById('editLink1');
+    const editDescription = document.getElementById('editDescription');
+    const saveEditBtn = document.getElementById('saveEditBtn');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+
+    // Quick Actions
+    const qaDrone = document.getElementById('qaDrone');
+    const qaList = document.getElementById('qaList');
+    const qaMap = document.getElementById('qaMap');
+    const qaReports = document.getElementById('qaReports');
+    const qaMusic = document.getElementById('qaMusic');
+    const qaBg = document.getElementById('qaBg');
+    const qaUsers = document.getElementById('qaUsers');
+
+    // ==================== HELPERS ====================
+    function setTodayDate() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth()+1).padStart(2,'0');
+        const d = String(now.getDate()).padStart(2,'0');
+        addDroneDate.value = `${y}-${m}-${d}`;
+    }
+    setTodayDate();
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        const tab = document.getElementById(tabId);
+        if (tab) tab.classList.add('active');
+        const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+        if (btn) btn.classList.add('active');
+    }
+
+    // ==================== AUTH ====================
+    function showAuthState(user) {
+        if (user) {
+            authWrapper.style.display = 'none';
+            dashboard.style.display = 'block';
+            userEmailDisplay.textContent = user.email || 'user';
+            authError.style.display = 'none';
+            loadAllData();
+        } else {
+            authWrapper.style.display = 'flex';
+            dashboard.style.display = 'none';
+        }
+    }
+    auth.onAuthStateChanged(user => showAuthState(user));
+
+    function showError(msg) {
+        authError.style.display = 'block';
+        errorText.textContent = msg;
+        setTimeout(() => authError.style.display = 'none', 4000);
+    }
+
+    loginBtn.addEventListener('click', () => {
+        const e = emailInput.value.trim(), p = passwordInput.value.trim();
+        if (!e || !p) { showError('Email & password required'); return; }
+        auth.signInWithEmailAndPassword(e,p).catch(err => showError(err.message));
+    });
+    signupBtn.addEventListener('click', () => {
+        const e = emailInput.value.trim(), p = passwordInput.value.trim();
+        if (!e || !p) { showError('Email & password required'); return; }
+        auth.createUserWithEmailAndPassword(e,p).catch(err => showError(err.message));
+    });
+    signOutBtn.addEventListener('click', () => auth.signOut());
+
+    // ==================== TABS ====================
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchTab(btn.dataset.tab);
+        });
+    });
+
+    // Quick Actions
+    qaDrone.addEventListener('click', () => switchTab('tabDrone'));
+    qaList.addEventListener('click', () => switchTab('tabList'));
+    qaMap.addEventListener('click', () => switchTab('tabMap'));
+    qaReports.addEventListener('click', () => switchTab('tabUserReport'));
+    qaMusic.addEventListener('click', () => switchTab('tabMusic'));
+    qaBg.addEventListener('click', () => switchTab('tabBlackground'));
+    qaUsers.addEventListener('click', () => switchTab('tabUsers'));
+
+    // ==================== LOAD ALL DATA ====================
+    function loadAllData() {
+        loadDroneData();
+        loadListData();
+        loadCustomMapData();
+        loadUserReports();
+        loadMusicData();
+        loadBlackgroundData();
+        loadUsersData();
+    }
+
+    // ==================== CUSTOM MAP (FEATURE) ====================
+    addMapTxt.addEventListener('input', () => {
+        const tags = addMapTxt.value.split(',').map(t => t.trim()).filter(t => t.length > 0);
+        dynamicMapFields.innerHTML = '';
+        tags.forEach(tag => {
+            const field = document.createElement('div');
+            field.className = 'field';
+            field.innerHTML = `
+                <label>Value for '${tag}'</label>
+                <input type="text" class="custom-map-tag-input" data-tag="${tag}" placeholder="Enter data for ${tag}" />
+            `;
+            dynamicMapFields.appendChild(field);
+        });
+    });
+
+    addMapBtn.addEventListener('click', () => {
+        const title = addMapTitle.value.trim();
+        const image = addMapImage.value.trim();
+        const txt = addMapTxt.value.trim();
+
+        if (!title) { alert('Title is required'); return; }
+
+        const payload = {
+            title: title,
+            image: image,
+            txt: txt
+        };
+
+        const tagInputs = dynamicMapFields.querySelectorAll('.custom-map-tag-input');
+        tagInputs.forEach(input => {
+            const tagKey = input.dataset.tag;
+            payload[tagKey] = input.value.trim();
+        });
+
+        customMapRef.push(payload).then(() => {
+            addMapTitle.value = '';
+            addMapImage.value = '';
+            addMapTxt.value = '';
+            dynamicMapFields.innerHTML = '';
+            alert('Custom Map added successfully!');
+        }).catch(err => alert(err.message));
+    });
+
+    function loadCustomMapData() {
+        customMapRef.on('value', snap => {
+            const data = snap.val();
+            mapCardContainer.innerHTML = '';
+            if (!data) { mapEmpty.style.display = 'block'; statMap.textContent = '0'; return; }
+            mapEmpty.style.display = 'none';
+            const keys = Object.keys(data);
+            statMap.textContent = keys.length;
+            keys.reverse().forEach(key => {
+                const item = data[key];
+                const card = document.createElement('div');
+                card.className = 'data-card';
+                
+                let dynamicTagsHtml = '';
+                if(item.txt) {
+                    const tags = item.txt.split(',').map(t => t.trim());
+                    dynamicTagsHtml = tags.map(t => `<div><strong>${t}:</strong> ${item[t] || '—'}</div>`).join('');
+                }
+
+                card.innerHTML = `
+                    ${item.image ? `<img src="${item.image}" class="card-image" onerror="this.style.display='none'" />` : ''}
+                    <div class="card-title">${item.title || 'Untitled Map'}</div>
+                    <div class="card-label"><i class="fas fa-tags"></i> Tags: ${item.txt || 'None'}</div>
+                    <div class="card-description">
+                        ${dynamicTagsHtml || 'No dynamic fields set.'}
+                    </div>
+                    <div class="card-actions">
+                        <button class="delete-btn" data-path="custommap" data-key="${key}"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                `;
+                mapCardContainer.appendChild(card);
+                card.querySelector('.delete-btn').addEventListener('click', () => {
+                    if (confirm('Delete Custom Map?')) {
+                        customMapRef.child(key).remove().catch(alert);
+                    }
+                });
+            });
+        });
+    }
+
+    // ==================== DRONE ====================
+    function loadDroneData() {
+        droneRef.on('value', snap => {
+            const data = snap.val();
+            droneCardContainer.innerHTML = '';
+            if (!data) { droneEmpty.style.display = 'block'; statDrone.textContent = '0'; return; }
+            droneEmpty.style.display = 'none';
+            const keys = Object.keys(data);
+            statDrone.textContent = keys.length;
+            keys.reverse().forEach(key => {
+                const item = data[key];
+                const card = document.createElement('div');
+                card.className = 'data-card';
+                const typeLabel = (item.type || 'drone').charAt(0).toUpperCase() + (item.type || 'drone').slice(1);
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="background:#f0f4fa; padding:2px 12px; border-radius:30px; font-size:0.65rem; font-weight:600; color:#1a3f62;">${typeLabel}</span>
+                    </div>
+                    <div class="card-title">${item.title || 'Untitled'}</div>
+                    <div class="card-label"><i class="fas fa-image"></i> ${item.label || 'no label'}</div>
+                    <div style="font-size:0.8rem; color:#6b7f94; margin:4px 0 8px;"><i class="fas fa-calendar-alt"></i> ${item.date || '—'}</div>
+                    <div class="card-links">
+                        ${item.link ? `<a href="${item.link}" target="_blank">link</a>` : ''}
+                        ${item.link1 ? `<a href="${item.link1}" target="_blank">link1</a>` : ''}
+                    </div>
+                    <div class="card-actions">
+                        <button class="edit-btn" data-path="drone" data-key="${key}"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="delete-btn" data-path="drone" data-key="${key}"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                `;
+                droneCardContainer.appendChild(card);
+                attachCardEvents(card, 'drone');
+            });
+        });
+    }
+
+    addDroneBtn.addEventListener('click', () => {
+        const title = addDroneTitle.value.trim();
+        if (!title) { alert('Title required'); return; }
+        droneRef.push({
+            title, label: addDroneLabel.value.trim(),
+            date: addDroneDate.value, type: addDroneType.value,
+            link: addDroneLink.value.trim(), link1: addDroneLink1.value.trim()
+        }).then(() => {
+            addDroneTitle.value = ''; addDroneLabel.value = '';
+            addDroneLink.value = ''; addDroneLink1.value = '';
+            setTodayDate();
+        }).catch(err => alert(err.message));
+    });
+
+    // ==================== LIST ====================
+    function loadListData() {
+        listRef.on('value', snap => {
+            const data = snap.val();
+            listCardContainer.innerHTML = '';
+            if (!data) { listEmpty.style.display = 'block'; statList.textContent = '0'; return; }
+            listEmpty.style.display = 'none';
+            const keys = Object.keys(data);
+            statList.textContent = keys.length;
+            keys.reverse().forEach(key => {
+                const item = data[key];
+                const card = document.createElement('div');
+                card.className = 'data-card';
+                card.innerHTML = `
+                    <div class="card-title">${item.title || 'Untitled'}</div>
+                    <div class="card-label"><i class="fas fa-tag"></i> ${item.label || 'no label'}</div>
+                    <div class="card-description"><i class="fas fa-align-left"></i> ${item.description || '—'}</div>
+                    <div class="card-links">
+                        ${item.link ? `<a href="${item.link}" target="_blank">link</a>` : ''}
+                        ${item.link1 ? `<a href="${item.link1}" target="_blank">link1</a>` : ''}
+                    </div>
+                    <div class="card-actions">
+                        <button class="edit-btn" data-path="list" data-key="${key}"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="delete-btn" data-path="list" data-key="${key}"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                `;
+                listCardContainer.appendChild(card);
+                attachCardEvents(card, 'list');
+            });
+        });
+    }
+
+    addListBtn.addEventListener('click', () => {
+        const title = addListTitle.value.trim();
+        if (!title) { alert('Title required'); return; }
+        listRef.push({
+            title, label: addListLabel.value.trim(),
+            link: addListLink.value.trim(), link1: addListLink1.value.trim(),
+            description: addListDescription.value.trim()
+        }).then(() => {
+            addListTitle.value = ''; addListLabel.value = '';
+            addListLink.value = ''; addListLink1.value = '';
+            addListDescription.value = '';
+        }).catch(err => alert(err.message));
+    });
+
+    // ==================== USER REPORTS ====================
+    function loadUserReports() {
+        reportRef.on('value', snap => {
+            const data = snap.val();
+            reportCardContainer.innerHTML = '';
+            if (!data) { reportEmpty.style.display = 'block'; statReports.textContent = '0'; reportBadge.textContent = '0'; return; }
+            reportEmpty.style.display = 'none';
+            const keys = Object.keys(data);
+            statReports.textContent = keys.length;
+            reportBadge.textContent = keys.length;
+            dataRef.once('value', userSnap => {
+                const userData = userSnap.val();
+                keys.reverse().forEach(key => {
+                    const item = data[key];
+                    const card = document.createElement('div');
+                    card.className = 'data-card';
+                    const isBanned = userData && item.dev_id && userData[item.dev_id] && 
+                                     (userData[item.dev_id].status === 'Ban' || userData[item.dev_id].status === 'ban');
+                    card.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="background:#f0f4fa; padding:2px 12px; border-radius:30px; font-size:0.6rem; font-weight:600;">${item.timestamp || 'No date'}</span>
+                            <span style="background:${isBanned ? '#ffebee' : '#e8f5e9'}; padding:2px 12px; border-radius:30px; font-size:0.6rem; font-weight:600; color:${isBanned ? '#e74c3c' : '#27ae60'};">${isBanned ? 'Banned' : 'Active'}</span>
+                        </div>
+                        <div style="font-size:0.85rem; color:#4a5e7a;"><i class="fas fa-id-card"></i> ${item.dev_id || 'Unknown'}</div>
+                        <div class="card-description" style="border-left-color:#e74c3c;"><i class="fas fa-exclamation-triangle"></i> ${item.message || 'No message'}</div>
+                        <div class="card-actions">
+                            ${!isBanned ? `
+                                <button class="ban-btn" data-device="${item.dev_id}"><i class="fas fa-ban"></i> Ban</button>
+                            ` : `
+                                <button class="unban-btn" data-device="${item.dev_id}"><i class="fas fa-check"></i> Unban</button>
+                            `}
+                            <button class="delete-report-btn" data-key="${key}"><i class="fas fa-trash"></i> Delete</button>
+                        </div>
+                    `;
+                    reportCardContainer.appendChild(card);
+                    
+                    const banBtn = card.querySelector('.ban-btn');
+                    if (banBtn) banBtn.addEventListener('click', () => {
+                        const id = banBtn.dataset.device;
+                        if (id && confirm(`Ban ${id}?`)) {
+                            dataRef.child(id).update({ status: 'Ban' }).then(() => loadUserReports()).catch(alert);
+                        }
+                    });
+                    const unbanBtn = card.querySelector('.unban-btn');
+                    if (unbanBtn) unbanBtn.addEventListener('click', () => {
+                        const id = unbanBtn.dataset.device;
+                        if (id && confirm(`Unban ${id}?`)) {
+                            dataRef.child(id).update({ status: 'unban' }).then(() => loadUserReports()).catch(alert);
+                        }
+                    });
+                    const delBtn = card.querySelector('.delete-report-btn');
+                    if (delBtn) delBtn.addEventListener('click', () => {
+                        if (confirm('Delete report?')) reportRef.child(delBtn.dataset.key).remove().catch(alert);
+                    });
+                });
+            });
+        });
+    }
+
+    refreshReportsBtn.addEventListener('click', () => { loadUserReports(); alert('Refreshed'); });
+
+    // ==================== MUSIC ====================
+    function loadMusicData() {
+        muRef.on('value', snap => {
+            const data = snap.val();
+            musicCardContainer.innerHTML = '';
+            if (!data) { musicEmpty.style.display = 'block'; statMusic.textContent = '0'; return; }
+            musicEmpty.style.display = 'none';
+            const keys = Object.keys(data);
+            statMusic.textContent = keys.length;
+            keys.reverse().forEach(key => {
+                const item = data[key];
+                const card = document.createElement('div');
+                card.className = 'data-card';
+                card.innerHTML = `
+                    ${item.img ? `<img src="${item.img}" class="card-image" onerror="this.style.display='none'" />` : ''}
+                    <div class="card-title">${item.tiltle || 'Untitled'}</div>
+                    <div class="card-label"><i class="fas fa-image"></i> ${item.img || 'no image'}</div>
+                    <div class="card-links">
+                        ${item.url ? `<a href="${item.url}" target="_blank"><i class="fas fa-file-archive"></i> Zip</a>` : ''}
+                        ${item.play ? `<a href="${item.play}" target="_blank"><i class="fas fa-play"></i> Play</a>` : ''}
+                    </div>
+                    <div class="card-actions">
+                        <button class="edit-btn" data-path="mu" data-key="${key}"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="delete-btn" data-path="mu" data-key="${key}"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                `;
+                musicCardContainer.appendChild(card);
+                attachCardEvents(card, 'mu');
+            });
+        });
+    }
+
+    addMusicBtn.addEventListener('click', () => {
+        const tiltle = addMusicTitle.value.trim();
+        if (!tiltle) { alert('Title required'); return; }
+        muRef.push({
+            tiltle, img: addMusicImg.value.trim(),
+            url: addMusicUrl.value.trim(), play: addMusicPlay.value.trim()
+        }).then(() => {
+            addMusicTitle.value = ''; addMusicImg.value = '';
+            addMusicUrl.value = ''; addMusicPlay.value = '';
+        }).catch(alert);
+    });
+
+    // ==================== BLACKGROUND ====================
+    function loadBlackgroundData() {
+        blackgroundRef.on('value', snap => {
+            const data = snap.val();
+            bgCardContainer.innerHTML = '';
+            if (!data) { bgEmpty.style.display = 'block'; statBg.textContent = '0'; return; }
+            bgEmpty.style.display = 'none';
+            const keys = Object.keys(data);
+            statBg.textContent = keys.length;
+            keys.reverse().forEach(key => {
+                const item = data[key];
+                const card = document.createElement('div');
+                card.className = 'data-card';
+                card.innerHTML = `
+                    ${item.label ? `<img src="${item.label}" class="card-image" onerror="this.style.display='none'" />` : ''}
+                    <div class="card-title">${item.tiltle || 'Untitled'}</div>
+                    <div class="card-label"><i class="fas fa-image"></i> ${item.label || 'no image'}</div>
+                    <div class="card-links">
+                        ${item.url ? `<a href="${item.url}" target="_blank">URL</a>` : ''}
+                    </div>
+                    <div class="card-actions">
+                        <button class="edit-btn" data-path="blackground" data-key="${key}"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="delete-btn" data-path="blackground" data-key="${key}"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                `;
+                bgCardContainer.appendChild(card);
+                attachCardEvents(card, 'blackground');
+            });
+        });
+    }
+
+    addBgBtn.addEventListener('click', () => {
+        const tiltle = addBgTitle.value.trim();
+        if (!tiltle) { alert('Title required'); return; }
+        blackgroundRef.push({
+            tiltle, label: addBgLabel.value.trim(),
+            url: addBgUrl.value.trim()
+        }).then(() => {
+            addBgTitle.value = ''; addBgLabel.value = '';
+            addBgUrl.value = '';
+        }).catch(alert);
+    });
+
+    // ==================== USERS (UPDATED DETAILED STATS) ====================
+    let allUsers = [];
+
+    function loadUsersData() {
+        dataRef.on('value', snap => {
+            const data = snap.val();
+            allUsers = [];
+            userCardContainer.innerHTML = '';
+
+            let premiumCount = 0;
+            let freeCount = 0;
+            let banCount = 0;
+            let expiredCount = 0;
+
+            if (!data) { 
+                userEmpty.style.display = 'block'; 
+                statUsers.textContent = '0'; 
+                userTabBadge.textContent = '0'; 
+                totalUsersText.textContent = 'Total: 0';
+                uStatTotal.textContent = '0';
+                uStatPremium.textContent = '0';
+                uStatFree.textContent = '0';
+                uStatBan.textContent = '0';
+                uStatExpired.textContent = '0';
+                return; 
+            }
+
+            userEmpty.style.display = 'none';
+            const keys = Object.keys(data);
+            
+            keys.reverse().forEach(key => {
+                const item = data[key];
+                item._key = key;
+                allUsers.push(item);
+
+                const statusStr = (item.status || '').toLowerCase();
+                let statusClass = 'free';
+
+                if (statusStr === 'ban') {
+                    statusClass = 'ban';
+                    banCount++;
+                } else if (statusStr === 'premium') {
+                    statusClass = 'premium';
+                    premiumCount++;
+                } else if (statusStr === 'expired') {
+                    statusClass = 'expired';
+                    expiredCount++;
+                } else {
+                    statusClass = 'free';
+                    freeCount++; // Default to Free/Unknown
+                }
+
+                const card = document.createElement('div');
+                card.className = 'data-card';
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span class="status-badge ${statusClass}">${item.status || 'free'}</span>
+                        <span style="font-size:0.6rem; color:#8a9bb0;">${item.date || 'No date'}</span>
+                    </div>
+                    <div class="card-title"><i class="fas fa-id-card"></i> ${item.id || 'Unknown'}</div>
+                    <div class="card-label"><i class="fas fa-desktop"></i> ${item.dev || 'No device'}</div>
+                    ${item.expired ? `<div style="font-size:0.75rem; color:#6b7f94; margin:4px 0;"><i class="fas fa-clock"></i> ${item.expired}</div>` : ''}
+                    <div class="card-actions">
+                        <button class="edit-btn user-edit-btn" data-key="${key}"><i class="fas fa-cog"></i> Manage</button>
+                        <button class="delete-btn user-delete-btn" data-key="${key}"><i class="fas fa-trash"></i> Delete</button>
+                        <button class="copy-token-btn" data-key="${key}"><i class="fas fa-copy"></i> Token</button>
+                    </div>
+                `;
+                userCardContainer.appendChild(card);
+                
+                card.querySelector('.user-edit-btn').addEventListener('click', () => showUserDialog(key, item));
+                card.querySelector('.user-delete-btn').addEventListener('click', () => {
+                    if (confirm(`Delete user ${item.id || 'Unknown'}?`)) {
+                        dataRef.child(key).remove().then(() => loadUsersData()).catch(alert);
+                    }
+                });
+                
+                card.querySelector('.copy-token-btn').addEventListener('click', () => {
+                    const token = item.token || 'No token';
+                    navigator.clipboard.writeText(token).then(() => {
+                        alert(`Token copied: ${token}`);
+                    }).catch(() => {
+                        const textArea = document.createElement('textarea');
+                        textArea.value = token;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        alert(`Token copied: ${token}`);
+                    });
+                });
+            });
+
+            // Update user dashboard breakdown counters
+            statUsers.textContent = keys.length;
+            userTabBadge.textContent = keys.length;
+            totalUsersText.textContent = `Total: ${keys.length}`;
+
+            uStatTotal.textContent = keys.length;
+            uStatPremium.textContent = premiumCount;
+            uStatFree.textContent = freeCount;
+            uStatBan.textContent = banCount;
+            uStatExpired.textContent = expiredCount;
+        });
+    }
+
+    function showUserDialog(key, item) {
+        const options = ['7 Days Premium', '15 Days Premium', '30 Days Premium', 'Lifetime Premium', 'Ban User', 'Free', 'Unban User', 'Mark Expired', 'Admin Access'];
+        const overlay = document.createElement('div');
+        overlay.className = 'user-dialog-overlay';
+        overlay.innerHTML = `
+            <div class="user-dialog-box">
+                <h3><i class="fas fa-user-cog" style="color:#2a7de1;"></i> Manage: ${item.id || 'Unknown'}</h3>
+                ${options.map(opt => `<button class="opt-btn" data-opt="${opt}"><i class="fas fa-chevron-right" style="color:#2a7de1; margin-right:10px;"></i> ${opt}</button>`).join('')}
+                <button class="close-dialog-btn">Cancel</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        overlay.querySelectorAll('.opt-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const opt = btn.dataset.opt;
+                const updates = {};
+                const now = new Date();
+                let status = '', expired = '';
+
+                if (opt.includes('Premium')) {
+                    status = 'premium';
+                    if (opt.includes('Days')) {
+                        const days = parseInt(opt.replace(/[^0-9]/g,''));
+                        const d = new Date(now); d.setDate(d.getDate()+days);
+                        expired = d.toLocaleDateString('en-GB');
+                    } else expired = '999/999/2126';
+                } else if (opt === 'Ban User') { status = 'Ban'; expired = '-'; }
+                else if (opt === 'Unban User') { status = 'unban'; expired = '-'; }
+                else if (opt === 'Admin Access') { status = 'admin'; expired = '-'; }
+                else if (opt === 'Free') { status = 'free'; expired = 'None'; }
+                else if (opt === 'Mark Expired') { status = 'expired'; expired = 'Expired'; }
+
+                updates.status = status; updates.expired = expired;
+                if (!item.date) updates.date = new Date().toLocaleDateString('en-GB', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+                dataRef.child(key).update(updates).then(() => {
+                    alert(`Updated: ${opt}`); overlay.remove(); loadUsersData();
+                }).catch(alert);
+            });
+        });
+        overlay.querySelector('.close-dialog-btn').addEventListener('click', () => overlay.remove());
+        overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    }
+
+    // Search users
+    searchUserInput.addEventListener('input', () => {
+        const q = searchUserInput.value.toLowerCase().trim();
+        const cards = userCardContainer.querySelectorAll('.data-card');
+        let visible = 0;
+        cards.forEach(c => {
+            const t = c.querySelector('.card-title')?.textContent || '';
+            const match = t.toLowerCase().includes(q);
+            c.style.display = match ? 'flex' : 'none';
+            if (match) visible++;
+        });
+        userEmpty.style.display = visible === 0 && allUsers.length > 0 ? 'block' : 'none';
+        if (allUsers.length === 0) userEmpty.style.display = 'block';
+    });
+
+    // ==================== CARD EVENTS ====================
+    function attachCardEvents(card, path) {
+        card.querySelector('.delete-btn').addEventListener('click', (e) => {
+            const k = e.currentTarget.dataset.key;
+            if (confirm('Delete?')) {
+                const ref = path === 'drone' ? droneRef : path === 'list' ? listRef : path === 'mu' ? muRef : path === 'blackground' ? blackgroundRef : null;
+                if (ref) ref.child(k).remove().catch(alert);
+            }
+        });
+        card.querySelector('.edit-btn').addEventListener('click', (e) => {
+            const k = e.currentTarget.dataset.key;
+            const ref = path === 'drone' ? droneRef : path === 'list' ? listRef : path === 'mu' ? muRef : path === 'blackground' ? blackgroundRef : null;
+            if (ref) ref.child(k).once('value', snap => {
+                const item = snap.val();
+                editKey.value = k; editPath.value = path;
+                editTitle.value = item.tiltle || item.title || '';
+                editLabel.value = item.label || item.img || '';
+                editLink.value = item.url || item.link || '';
+                editLink1.value = item.link1 || item.play || '';
+                editDescription.value = item.description || '';
+                editModal.classList.add('active');
+            });
+        });
+    }
+
+    // ==================== EDIT MODAL ====================
+    cancelEditBtn.addEventListener('click', () => editModal.classList.remove('active'));
+    editModal.addEventListener('click', e => { if (e.target === editModal) editModal.classList.remove('active'); });
+    saveEditBtn.addEventListener('click', () => {
+        const key = editKey.value, path = editPath.value;
+        if (!key || !path) return;
+        const updated = {};
+        if (path === 'blackground') {
+            updated.tiltle = editTitle.value.trim(); updated.label = editLabel.value.trim(); updated.url = editLink.value.trim();
+        } else if (path === 'mu') {
+            updated.tiltle = editTitle.value.trim(); updated.img = editLabel.value.trim(); updated.url = editLink.value.trim(); updated.play = editLink1.value.trim();
+        } else {
+            updated.title = editTitle.value.trim(); updated.label = editLabel.value.trim(); updated.link = editLink.value.trim(); updated.link1 = editLink1.value.trim(); updated.description = editDescription.value.trim();
+        }
+        if (!updated.tiltle && !updated.title) { alert('Title required'); return; }
+        const ref = path === 'drone' ? droneRef : path === 'list' ? listRef : path === 'mu' ? muRef : path === 'blackground' ? blackgroundRef : null;
+        if (ref) ref.child(key).update(updated).then(() => { editModal.classList.remove('active'); }).catch(alert);
+    });
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') editModal.classList.remove('active'); });
+
+    console.log('🔥 Firebase Data Manager ready!');
+</script>
+
+</body>
+</html>
